@@ -21,17 +21,17 @@ def add_chromatic_aberration(image, shift=8, blur_radius=10, noise_level=3):
     g = np.array(g)
     b = np.array(b)
     
-    noise_r = np.random.randint(-noise_level, noise_level, r.shape)  # Noise untuk saluran merah
-    noise_b = np.random.randint(-noise_level, noise_level, b.shape)  # Noise untuk saluran biru
+    noise_r = np.random.randint(-noise_level, noise_level, r.shape)  # Noise saluran merah
+    noise_b = np.random.randint(-noise_level, noise_level, b.shape)  # Noise saluran biru
     
-    r = np.roll(r + noise_r, shift, axis=1)  # Geser saluran merah ke kanan dengan noise
-    b = np.roll(b + noise_b, -shift, axis=1) # Geser saluran biru ke kiri dengan noise
+    r = np.roll(r + noise_r, shift, axis=1)  
+    b = np.roll(b + noise_b, -shift, axis=1)
     
     r = np.clip(r, 0, 255)
     b = np.clip(b, 0, 255)
     
     r = Image.fromarray(r.astype('uint8')).filter(ImageFilter.GaussianBlur(blur_radius))
-    g = Image.fromarray(g.astype('uint8'))  # Saluran hijau dibiarkan tanpa blur
+    g = Image.fromarray(g.astype('uint8'))  
     b = Image.fromarray(b.astype('uint8')).filter(ImageFilter.GaussianBlur(blur_radius))
     
     return Image.merge("RGB", (r, g, b))
@@ -46,17 +46,17 @@ def create_focus_effect(image, shift=5, blur_radius=10, noise_level=3, brightnes
     g = np.array(g)
     b = np.array(b)
     
-    noise_r = np.random.randint(-noise_level, noise_level, r.shape)  # Noise untuk saluran merah
-    noise_b = np.random.randint(-noise_level, noise_level, b.shape)  # Noise untuk saluran biru
+    noise_r = np.random.randint(-noise_level, noise_level, r.shape)  
+    noise_b = np.random.randint(-noise_level, noise_level, b.shape) 
     
-    r = np.roll(r + noise_r, shift, axis=1)  # Geser saluran merah ke kanan dengan noise
-    b = np.roll(b + noise_b, -shift, axis=1) # Geser saluran biru ke kiri dengan noise
+    r = np.roll(r + noise_r, shift, axis=1)  
+    b = np.roll(b + noise_b, -shift, axis=1)
     
     r = np.clip(r, 0, 255)
     b = np.clip(b, 0, 255)
     
     r = Image.fromarray(r.astype('uint8')).filter(ImageFilter.GaussianBlur(blur_radius))
-    g = Image.fromarray(g.astype('uint8'))  # Saluran hijau dibiarkan tanpa blur
+    g = Image.fromarray(g.astype('uint8')) 
     b = Image.fromarray(b.astype('uint8')).filter(ImageFilter.GaussianBlur(blur_radius))
     
     final_image = Image.merge("RGB", (r, g, b))
@@ -65,7 +65,7 @@ def create_focus_effect(image, shift=5, blur_radius=10, noise_level=3, brightnes
     final_image = enhancer.enhance(brightness_factor)
     
     width, height = final_image.size
-    mask = Image.new("L", final_image.size, 0)  # Masking area fokus (L=grayscale)
+    mask = Image.new("L", final_image.size, 0)
     
     focus_center_x = int(width * focus_area[0])
     focus_center_y = int(height * focus_area[1])
@@ -80,7 +80,7 @@ def create_focus_effect(image, shift=5, blur_radius=10, noise_level=3, brightnes
     return final_image
 
 
-input_image_path = "input.jpg" # Ganti dengan path gambar asli
+input_image_path = "input.jpg"
 output_image_path = "output.jpg" # Nama file output
 image = Image.open(input_image_path).convert("RGB")
 
