@@ -21,8 +21,8 @@ def add_chromatic_aberration(image, shift=8, blur_radius=10, noise_level=3):
     g = np.array(g)
     b = np.array(b)
     
-    noise_r = np.random.randint(-noise_level, noise_level, r.shape)  # Noise saluran merah
-    noise_b = np.random.randint(-noise_level, noise_level, b.shape)  # Noise saluran biru
+    noise_r = np.random.randint(-noise_level, noise_level, r.shape) 
+    noise_b = np.random.randint(-noise_level, noise_level, b.shape) 
     
     r = np.roll(r + noise_r, shift, axis=1)  
     b = np.roll(b + noise_b, -shift, axis=1)
