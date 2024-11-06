@@ -2,66 +2,91 @@ from PIL import Image, ImageDraw, ImageFilter
 import numpy as np
 import random
 
-# Fungsi untuk menambahkan noise halus
 def add_noise(image, intensity=30):
-    # Konversi gambar ke array NumPy
     np_img = np.array(image)
-    # Membuat noise
     noise = np.random.randint(-intensity, intensity, np_img.shape, dtype='int16')
-    # Menambahkan noise ke gambar asli
     noisy_img = np.clip(np_img + noise, 0, 255).astype('uint8')
     return Image.fromarray(noisy_img)
 
-# Fungsi untuk menambahkan pola garis halus
 def add_stripe_pattern(image, stripe_width=2, opacity=50):
     draw = ImageDraw.Draw(image)
     for y in range(0, image.height, stripe_width * 2):
         draw.rectangle([0, y, image.width, y + stripe_width], fill=(255, 255, 255, opacity))
     return image
 
-# Fungsi untuk menambahkan efek chromatic aberration sederhana
-# def add_chromatic_aberration(image, shift=5):
-#     r, g, b = image.split()
-#     r = r.offset(shift, 0) # Geser kanal merah
-#     b = b.offset(-shift, 0) # Geser kanal biru
-#     return Image.merge("RGB", (r, g, b))
-
-def add_chromatic_aberration(image, shift=5):
-    # Pisahkan gambar menjadi saluran R, G, dan B
+def add_chromatic_aberration(image, shift=8, blur_radius=10, noise_level=3):
     r, g, b = image.split()
     
-    # Ubah masing-masing saluran menjadi array NumPy
     r = np.array(r)
     g = np.array(g)
     b = np.array(b)
     
-    # Geser saluran merah dan biru
-    r = np.roll(r, shift, axis=1)  # Geser saluran merah ke kanan
-    b = np.roll(b, -shift, axis=1) # Geser saluran biru ke kiri
+    noise_r = np.random.randint(-noise_level, noise_level, r.shape)  # Noise untuk saluran merah
+    noise_b = np.random.randint(-noise_level, noise_level, b.shape)  # Noise untuk saluran biru
     
-    # Pastikan hasilnya tetap berada dalam rentang [0, 255]
+    r = np.roll(r + noise_r, shift, axis=1)  # Geser saluran merah ke kanan dengan noise
+    b = np.roll(b + noise_b, -shift, axis=1) # Geser saluran biru ke kiri dengan noise
+    
     r = np.clip(r, 0, 255)
     b = np.clip(b, 0, 255)
     
-    # Kembali ke objek gambar Pillow setelah dimanipulasi
-    r = Image.fromarray(r.astype('uint8'))
-    g = Image.fromarray(g.astype('uint8'))
-    b = Image.fromarray(b.astype('uint8'))
+    r = Image.fromarray(r.astype('uint8')).filter(ImageFilter.GaussianBlur(blur_radius))
+    g = Image.fromarray(g.astype('uint8'))  # Saluran hijau dibiarkan tanpa blur
+    b = Image.fromarray(b.astype('uint8')).filter(ImageFilter.GaussianBlur(blur_radius))
     
-    # Gabungkan kembali saluran RGB menjadi gambar
     return Image.merge("RGB", (r, g, b))
 
+from PIL import Image, ImageFilter, ImageEnhance, ImageDraw
+import numpy as np
 
-# Membuka gambar asli
+def create_focus_effect(image, shift=5, blur_radius=10, noise_level=3, brightness_factor=1.5, focus_area=(0.5, 0.5), focus_radius=0.1):
+    r, g, b = image.split()
+    
+    r = np.array(r)
+    g = np.array(g)
+    b = np.array(b)
+    
+    noise_r = np.random.randint(-noise_level, noise_level, r.shape)  # Noise untuk saluran merah
+    noise_b = np.random.randint(-noise_level, noise_level, b.shape)  # Noise untuk saluran biru
+    
+    r = np.roll(r + noise_r, shift, axis=1)  # Geser saluran merah ke kanan dengan noise
+    b = np.roll(b + noise_b, -shift, axis=1) # Geser saluran biru ke kiri dengan noise
+    
+    r = np.clip(r, 0, 255)
+    b = np.clip(b, 0, 255)
+    
+    r = Image.fromarray(r.astype('uint8')).filter(ImageFilter.GaussianBlur(blur_radius))
+    g = Image.fromarray(g.astype('uint8'))  # Saluran hijau dibiarkan tanpa blur
+    b = Image.fromarray(b.astype('uint8')).filter(ImageFilter.GaussianBlur(blur_radius))
+    
+    final_image = Image.merge("RGB", (r, g, b))
+    
+    enhancer = ImageEnhance.Brightness(final_image)
+    final_image = enhancer.enhance(brightness_factor)
+    
+    width, height = final_image.size
+    mask = Image.new("L", final_image.size, 0)  # Masking area fokus (L=grayscale)
+    
+    focus_center_x = int(width * focus_area[0])
+    focus_center_y = int(height * focus_area[1])
+    focus_radius_pixels = int(min(width, height) * focus_radius)
+    
+    draw = ImageDraw.Draw(mask)
+    draw.ellipse([focus_center_x - focus_radius_pixels, focus_center_y - focus_radius_pixels,
+                  focus_center_x + focus_radius_pixels, focus_center_y + focus_radius_pixels], fill=255)
+    
+    final_image = Image.composite(final_image, final_image.filter(ImageFilter.GaussianBlur(20)), mask)
+    
+    return final_image
+
+
 input_image_path = "input.jpg" # Ganti dengan path gambar asli
 output_image_path = "output.jpg" # Nama file output
 image = Image.open(input_image_path).convert("RGB")
 
-# Menambahkan efek pada gambar
 image_with_noise = add_noise(image)
 image_with_stripes = add_stripe_pattern(image_with_noise)
 final_image = add_chromatic_aberration(image_with_stripes)
 
-# Simpan gambar hasil
 final_image.save(output_image_path)
 print("Gambar dengan efek tersimpan di:", output_image_path)
